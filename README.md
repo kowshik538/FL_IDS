@@ -1,5 +1,5 @@
 
-# AgisFL - Advanced Federated Learning Intrusion Detection System
+# Advanced Federated Learning Intrusion Detection System
 
 ## 🚀 Enterprise-Grade Cybersecurity Platform
 
