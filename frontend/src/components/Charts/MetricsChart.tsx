@@ -1,0 +1,241 @@
+import React from 'react';
+import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+} from 'chart.js';
+import { motion } from 'framer-motion';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
+
+interface MetricsChartProps {
+  type: 'line' | 'bar' | 'doughnut';
+  data: any;
+  title?: string;
+  height?: number;
+  gradient?: boolean;
+  realTime?: boolean;
+}
+
+const DOUGHNUT_PALETTE = [
+  '#3B82F6',
+  '#10B981',
+  '#F59E0B',
+  '#EF4444',
+  '#8B5CF6',
+  '#06B6D4',
+  '#F97316',
+  '#22C55E',
+  '#EC4899',
+  '#6366F1',
+];
+
+function withDoughnutColors(input: any) {
+  const labels: any[] = Array.isArray(input?.labels) ? input.labels : [];
+  const count = labels.length || 1;
+
+  return {
+    ...input,
+    datasets: (input?.datasets || []).map((dataset: any, datasetIndex: number) => {
+      const bg = dataset?.backgroundColor;
+      const hasArrayColors = Array.isArray(bg) && bg.length >= count;
+
+      if (hasArrayColors) {
+        return dataset;
+      }
+
+      const colors = Array.from({ length: count }, (_, i) =>
+        DOUGHNUT_PALETTE[(i + datasetIndex) % DOUGHNUT_PALETTE.length]
+      );
+
+      return {
+        ...dataset,
+        backgroundColor: colors,
+        borderColor: '#111827',
+        borderWidth: 2,
+        hoverOffset: 6,
+      };
+    }),
+  };
+}
+
+const MetricsChart: React.FC<MetricsChartProps> = ({
+  type,
+  data,
+  title,
+  height = 300,
+  gradient = true,
+  realTime = false
+}) => {
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: type !== 'doughnut',
+        position: 'top' as const,
+        labels: {
+          color: '#9CA3AF',
+          font: {
+            size: 12,
+            weight: '500',
+          },
+          usePointStyle: true,
+          pointStyle: 'circle',
+        },
+      },
+      tooltip: {
+        backgroundColor: 'rgba(17, 24, 39, 0.95)',
+        titleColor: '#F9FAFB',
+        bodyColor: '#F9FAFB',
+        borderColor: '#374151',
+        borderWidth: 1,
+        cornerRadius: 8,
+        displayColors: true,
+        intersect: false,
+        mode: 'index' as const,
+      },
+    },
+    scales: type !== 'doughnut' ? {
+      x: {
+        grid: {
+          color: 'rgba(75, 85, 99, 0.2)',
+          drawBorder: false,
+        },
+        ticks: {
+          color: '#9CA3AF',
+          font: {
+            size: 11,
+          },
+        },
+      },
+      y: {
+        grid: {
+          color: 'rgba(75, 85, 99, 0.2)',
+          drawBorder: false,
+        },
+        ticks: {
+          color: '#9CA3AF',
+          font: {
+            size: 11,
+          },
+        },
+        beginAtZero: true,
+      },
+    } : undefined,
+    elements: {
+      point: {
+        radius: realTime ? 0 : 4,
+        hoverRadius: 6,
+      },
+      line: {
+        tension: 0.4,
+        borderWidth: 2,
+      },
+      bar: {
+        borderRadius: 4,
+        borderSkipped: false,
+      },
+    },
+    animation: {
+      duration: realTime ? 0 : 750,
+      easing: 'easeInOutQuart' as const,
+    },
+    interaction: {
+      intersect: false,
+      mode: 'index' as const,
+    },
+  };
+
+  // Apply gradients if enabled
+  const processedData = gradient && type === 'line' ? {
+    ...data,
+    datasets: data.datasets?.map((dataset: any, index: number) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        const gradientFill = ctx.createLinearGradient(0, 0, 0, height);
+        const color = dataset.borderColor || `hsl(${index * 60}, 70%, 50%)`;
+        
+        // Convert color to rgba format for proper gradient
+        let startColor, endColor;
+        if (color.startsWith('rgb(')) {
+          const rgbValues = color.slice(4, -1);
+          startColor = `rgba(${rgbValues}, 0.25)`;
+          endColor = `rgba(${rgbValues}, 0)`;
+        } else if (color.startsWith('hsl(')) {
+          startColor = color.replace('hsl(', 'hsla(').replace(')', ', 0.25)');
+          endColor = color.replace('hsl(', 'hsla(').replace(')', ', 0)');
+        } else if (color.startsWith('rgba(')) {
+          startColor = color.replace(/, ?\d(\.\d+)?\)$/, ', 0.25)');
+          endColor = color.replace(/, ?\d(\.\d+)?\)$/, ', 0)');
+        } else {
+          // Fallback for hex colors or other formats
+          startColor = `${color}40`;
+          endColor = `${color}00`;
+        }
+        
+        gradientFill.addColorStop(0, startColor);
+        gradientFill.addColorStop(1, endColor);
+        
+        return {
+          ...dataset,
+          backgroundColor: gradientFill,
+          fill: true,
+        };
+      }
+      return dataset;
+    })
+  } : type === 'doughnut' ? withDoughnutColors(data) : data;
+
+  const ChartComponent = type === 'line' ? Line : type === 'bar' ? Bar : Doughnut;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="bg-white/80 dark:bg-gray-800/70 backdrop-blur rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+    >
+      {title && (
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            {title}
+          </h3>
+          {realTime && (
+            <div className="flex items-center space-x-2 text-green-600 dark:text-green-400">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <span className="text-xs font-medium">Live</span>
+            </div>
+          )}
+        </div>
+      )}
+      
+      <div style={{ height }}>
+        <ChartComponent data={processedData} options={chartOptions} />
+      </div>
+    </motion.div>
+  );
+};
+
+export default MetricsChart;
