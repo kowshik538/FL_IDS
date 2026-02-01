@@ -137,13 +137,13 @@ const TopNavigation: React.FC = () => {
   }, [mobileMenuOpen, userMenuOpen]);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-b border-gray-200 dark:border-gray-700 shadow-lg">
-      <div className="max-w-full px-6">
-        <div className="flex items-center justify-between h-20">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-slate-950/70 backdrop-blur-xl border-b border-gray-200/60 dark:border-slate-800/60 shadow-sm">
+      <div className="max-w-full px-4 sm:px-6">
+        <div className="flex items-center justify-between h-16">
           {/* Logo & Brand */}
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-11 h-11 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-md ring-1 ring-white/20 dark:ring-white/10">
                 <Zap className="w-7 h-7 text-white" />
               </div>
               <div className={clsx(
@@ -155,14 +155,11 @@ const TopNavigation: React.FC = () => {
               <h1 className="font-bold text-gray-900 dark:text-white text-xl tracking-tight">
                 IDS Enterprise
               </h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                Advanced FL-IDS Platform v4.0
-              </p>
             </div>
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-1">
+          <div className="hidden lg:flex items-center rounded-2xl bg-gray-100/80 dark:bg-slate-900/60 p-1 ring-1 ring-gray-200/60 dark:ring-slate-800/60">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (
@@ -170,21 +167,21 @@ const TopNavigation: React.FC = () => {
                   key={item.path}
                   to={item.path}
                   className={clsx(
-                    'relative px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex items-center space-x-2',
+                    'group relative px-3.5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center space-x-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60',
                     isActive
-                      ? 'text-white shadow-lg'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                      ? 'text-white shadow-md'
+                      : 'text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-slate-800/70'
                   )}
                 >
                   {isActive && (
                     <motion.div
                       layoutId="activeTab"
-                      className={`absolute inset-0 bg-gradient-to-r ${item.color} rounded-xl`}
+                      className={`absolute inset-0 bg-gradient-to-r ${item.color} rounded-xl ring-1 ring-white/20`}
                       transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                     />
                   )}
                   <div className="relative z-10 flex items-center space-x-2">
-                    <item.icon className="w-4 h-4" />
+                    <item.icon className={clsx('w-4 h-4 transition-colors', isActive ? 'text-white' : 'text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200')} />
                     <span>{item.label}</span>
                   </div>
                 </NavLink>
@@ -201,7 +198,7 @@ const TopNavigation: React.FC = () => {
                 <input
                   type="text"
                   placeholder="Search..."
-                  className="w-64 pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-72 pl-10 pr-4 py-2 bg-white/70 dark:bg-slate-900/60 border border-gray-200/70 dark:border-slate-800/70 rounded-xl text-sm text-gray-800 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent"
                 />
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
                   <kbd className="px-2 py-1 text-xs bg-gray-200 dark:bg-gray-700 rounded">⌘</kbd>
@@ -228,7 +225,7 @@ const TopNavigation: React.FC = () => {
             </div>
 
             {/* Connection Status */}
-            <div className="flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
+            <div className="hidden sm:flex items-center space-x-2 px-3 py-2 bg-gray-100/80 dark:bg-slate-900/60 border border-gray-200/60 dark:border-slate-800/60 rounded-xl">
               {getConnectionIcon()}
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 {getConnectionText()}
@@ -238,7 +235,7 @@ const TopNavigation: React.FC = () => {
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="p-2 rounded-xl hover:bg-gray-100/80 dark:hover:bg-slate-800/70 border border-transparent hover:border-gray-200/60 dark:hover:border-slate-700/60 transition-colors"
               aria-label="Toggle theme"
             >
               {theme === 'dark' ? (
@@ -249,7 +246,7 @@ const TopNavigation: React.FC = () => {
             </button>
 
             {/* Notifications */}
-            <button className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+            <button className="relative p-2 rounded-xl hover:bg-gray-100/80 dark:hover:bg-slate-800/70 border border-transparent hover:border-gray-200/60 dark:hover:border-slate-700/60 transition-colors">
               <Bell className="w-5 h-5 text-gray-600 dark:text-gray-400" />
               {unreadNotificationsCount > 0 && (
                 <motion.div
@@ -267,7 +264,7 @@ const TopNavigation: React.FC = () => {
               to="/settings"
               aria-label="Settings"
               title="Settings"
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900 transition-colors"
+              className="p-2 rounded-xl hover:bg-gray-100/80 dark:hover:bg-slate-800/70 border border-transparent hover:border-gray-200/60 dark:hover:border-slate-700/60 focus:outline-none focus:ring-2 focus:ring-blue-500/60 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-950 transition-colors"
             >
               <Settings className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             </NavLink>
@@ -279,7 +276,7 @@ const TopNavigation: React.FC = () => {
                   e.stopPropagation();
                   setUserMenuOpen(!userMenuOpen);
                 }}
-                className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="flex items-center space-x-3 p-1.5 rounded-xl hover:bg-gray-100/80 dark:hover:bg-slate-800/70 border border-transparent hover:border-gray-200/60 dark:hover:border-slate-700/60 transition-colors"
               >
                 <div className="hidden md:block text-right">
                   <p className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -293,7 +290,7 @@ const TopNavigation: React.FC = () => {
                   <img
                     src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"
                     alt="User Avatar"
-                    className="w-10 h-10 rounded-full border-2 border-gray-200 dark:border-gray-700"
+                    className="w-10 h-10 rounded-full border border-gray-200/80 dark:border-slate-700/80"
                   />
                   <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white dark:border-gray-900 rounded-full" />
                 </div>
@@ -307,7 +304,7 @@ const TopNavigation: React.FC = () => {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-2"
+                    className="absolute right-0 mt-2 w-64 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/70 dark:border-slate-800/70 py-2"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
@@ -319,13 +316,13 @@ const TopNavigation: React.FC = () => {
                       </p>
                     </div>
                     <div className="py-2">
-                      <button className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                      <button className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100/80 dark:hover:bg-slate-800/70">
                         Profile Settings
                       </button>
-                      <button className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                      <button className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100/80 dark:hover:bg-slate-800/70">
                         Security
                       </button>
-                      <button className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700">
+                      <button className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100/80 dark:hover:bg-slate-800/70">
                         Sign Out
                       </button>
                     </div>
@@ -340,7 +337,7 @@ const TopNavigation: React.FC = () => {
                 e.stopPropagation();
                 setMobileMenuOpen(!mobileMenuOpen);
               }}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="lg:hidden p-2 rounded-xl hover:bg-gray-100/80 dark:hover:bg-slate-800/70 border border-transparent hover:border-gray-200/60 dark:hover:border-slate-700/60 transition-colors"
             >
               {mobileMenuOpen ? (
                 <X className="w-6 h-6 text-gray-600 dark:text-gray-400" />
@@ -358,7 +355,7 @@ const TopNavigation: React.FC = () => {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+              className="lg:hidden border-t border-gray-200/60 dark:border-slate-800/60 bg-white/90 dark:bg-slate-950/80 backdrop-blur-xl"
             >
               <div className="px-6 py-4 space-y-2">
                 {navItems.map((item) => {
@@ -369,10 +366,10 @@ const TopNavigation: React.FC = () => {
                       to={item.path}
                       onClick={() => setMobileMenuOpen(false)}
                       className={clsx(
-                        'flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200',
+                        'flex items-center space-x-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-200',
                         isActive
                           ? `bg-gradient-to-r ${item.color} text-white shadow-lg`
-                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                          : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100/80 dark:hover:bg-slate-800/70'
                       )}
                     >
                       <item.icon className="w-5 h-5" />
