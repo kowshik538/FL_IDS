@@ -477,9 +477,6 @@ Troubleshooting:
 - Maintain test coverage above 90%
 - Document all public APIs
 
-## 📄 **License**
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 **Acknowledgments**
 
@@ -487,18 +484,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Open Source Contributors**: For various libraries and tools
 - **Academic Partners**: For research collaboration and validation
 
-## 📞 **Support**
-
-### Documentation
-- [API Reference](docs/api.md)
-- [User Guide](docs/user-guide.md)
-- [Developer Guide](docs/developer.md)
-
-### Contact
-- **Issues**: [GitHub Issues](https://github.com/your-repo/agisfl-enterprise/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-repo/agisfl-enterprise/discussions)
-- **Email**: support@agisfl-enterprise.com
-
----
-
-**AgisFL Enterprise v3.1.0** - *Empowering Cybersecurity with Federated Learning*
