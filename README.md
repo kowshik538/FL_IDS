@@ -1,4 +1,4 @@
-# AgisFL Enterprise - Federated Learning Intrusion Detection System
+# FL Enterprise - Federated Learning Intrusion Detection System
 
 ## 🚀 **Enterprise-Grade FL-IDS Platform v3.1.0**
 
