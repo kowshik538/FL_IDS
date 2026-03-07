@@ -83,7 +83,9 @@ function createWindow() {
   // Load the app
   loadApp(mainWindow)
     .then(() => {
-      if (isDev) {
+      // DevTools can emit noisy protocol warnings (e.g. Autofill.*) depending on Electron/Chromium.
+      // Keep DevTools opt-in via env var instead of always opening.
+      if (isDev && process.env.ELECTRON_OPEN_DEVTOOLS === '1') {
         mainWindow.webContents.openDevTools();
       }
     })

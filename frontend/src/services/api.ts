@@ -120,15 +120,28 @@ export const datasetsAPI = {
     formData.append('file', file);
     if (metadata) {
       Object.entries(metadata).forEach(([key, value]) => {
-        formData.append(key, String(value));
+        if (value !== undefined && value !== null) {
+          formData.append(key, Array.isArray(value) ? value.join(',') : String(value));
+        }
       });
     }
+    // Use 10 min timeout for large files (e.g. 70MB+)
+    const timeoutMs = Math.max(60000, file.size / 1024); // at least 1 min, scales with file size
     return api.post('/datasets/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: Math.min(timeoutMs, 600000), // cap at 10 min
       onUploadProgress: (progressEvent) => {
-        if (onProgress && progressEvent.total) {
-          const progress = (progressEvent.loaded / progressEvent.total) * 100;
-          onProgress(progress);
+        if (onProgress) {
+          if (progressEvent.total && progressEvent.total > 0) {
+            const progress = (progressEvent.loaded / progressEvent.total) * 100;
+            onProgress(progress);
+          } else {
+            // Chunked encoding: estimate from bytes loaded (assume ~50% done when half uploaded)
+            const est = progressEvent.loaded > 0 && file.size > 0
+              ? Math.min(99, (progressEvent.loaded / file.size) * 100)
+              : 5;
+            onProgress(est);
+          }
         }
       }
     });

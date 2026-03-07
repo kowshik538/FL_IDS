@@ -15,6 +15,7 @@ import {
   Filter,
   Check,
   X,
+  RefreshCw,
   Loader2,
   FileText,
   Grid,
@@ -94,35 +95,35 @@ const UploadMetadataModal: React.FC<{
 
         <div className="mt-4 space-y-3 text-sm">
           <label className="block">
-            <div className="text-xs text-gray-600">File</div>
-            <input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+            <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">File (CSV recommended)</div>
+            <input type="file" accept=".csv,.txt,.json" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="block w-full text-sm text-gray-600 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-900/30 dark:file:text-blue-300 file:font-medium" />
             {file && <div className="mt-1 text-xs text-gray-500">{file.name} • {_formatBytes(file.size)}</div>}
           </label>
 
           <label>
-            <div className="text-xs text-gray-600">Name</div>
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Descriptive dataset name" className="w-full px-3 py-2 border rounded" />
+            <div className="text-xs text-gray-600 dark:text-gray-400">Name</div>
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Descriptive dataset name" className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100" />
           </label>
 
           <label>
-            <div className="text-xs text-gray-600">Description</div>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="w-full px-3 py-2 border rounded" placeholder="Short summary of dataset content" />
+            <div className="text-xs text-gray-600 dark:text-gray-400">Description</div>
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100" placeholder="Short summary of dataset content" />
           </label>
 
           <label>
-            <div className="text-xs text-gray-600">Tags (comma-separated)</div>
-            <input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="e.g. network,ids,botnet" className="w-full px-3 py-2 border rounded" />
+            <div className="text-xs text-gray-600 dark:text-gray-400">Tags (comma-separated)</div>
+            <input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="e.g. network,ids,botnet" className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100" />
           </label>
         </div>
 
         <div className="mt-4 flex justify-end gap-2">
-          <button onClick={onClose} className="px-3 py-2 rounded border">Cancel</button>
+          <button onClick={onClose} className="px-3 py-2 rounded border dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200">Cancel</button>
           <button
             onClick={() => {
               if (!file) return toast.error("Select a file first");
               onSubmit(file, { name: name || file.name, description, tags: tags.split(",").map(t => t.trim()).filter(Boolean) });
             }}
-            className="px-4 py-2 rounded bg-blue-600 text-white"
+            className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors"
           >
             Upload
           </button>
@@ -328,8 +329,8 @@ const DatasetManager: React.FC = () => {
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Datasets</h1>
-          <p className="text-sm text-gray-500">Manage datasets used by the FL engine — upload, preview, export and monitor quality & privacy.</p>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Datasets</h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Manage datasets used by the FL engine — upload, preview, export and monitor quality & privacy.</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -368,12 +369,12 @@ const DatasetManager: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-gray-500" />
-          <select className="px-3 py-1 rounded border bg-white" value={tagFilter ?? ""} onChange={(e) => { setTagFilter(e.target.value || null); setPage(1); }}>
+          <select className="px-3 py-1 rounded border bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200" value={tagFilter ?? ""} onChange={(e) => { setTagFilter(e.target.value || null); setPage(1); }}>
             <option value="">All tags</option>
             {tags.map(t => <option value={t} key={t}>{t}</option>)}
           </select>
 
-          <select className="px-3 py-1 rounded border bg-white" value={statusFilter ?? ""} onChange={(e) => { setStatusFilter(e.target.value || null); setPage(1); }}>
+          <select className="px-3 py-1 rounded border bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200" value={statusFilter ?? ""} onChange={(e) => { setStatusFilter(e.target.value || null); setPage(1); }}>
             <option value="">All statuses</option>
             <option value="ready">Ready</option>
             <option value="processing">Processing</option>
@@ -388,9 +389,18 @@ const DatasetManager: React.FC = () => {
       {/* Content area */}
       <div>
         {isLoading ? (
-          <div className="py-12 flex justify-center items-center"><Loader2 className="animate-spin" /></div>
+          <div className="py-12 flex justify-center items-center"><Loader2 className="animate-spin w-8 h-8 text-blue-500" /></div>
         ) : isError ? (
-          <div className="py-8 text-center text-red-600">Error loading datasets</div>
+          <div className="py-12 px-6 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 text-center">
+            <p className="text-red-600 dark:text-red-400 font-medium">Error loading datasets</p>
+            <p className="text-sm text-red-500 dark:text-red-500 mt-1">Ensure the backend is running at http://127.0.0.1:8001</p>
+            <button
+              onClick={() => qc.invalidateQueries(["datasets"])}
+              className="mt-4 px-4 py-2 rounded-md bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors inline-flex items-center gap-2"
+            >
+              <RefreshCw className="w-4 h-4" /> Retry
+            </button>
+          </div>
         ) : items.length === 0 ? (
           <div className="py-12 text-center text-gray-500">No datasets found. Upload your first dataset to get started.</div>
         ) : viewMode === "table" ? (
@@ -501,9 +511,9 @@ const DatasetManager: React.FC = () => {
       {/* Pagination & upload progress */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <button onClick={() => prevPage()} disabled={page <= 1} className="px-3 py-1 rounded border">Prev</button>
-          <input value={String(page)} onChange={(e) => goToPage(Number(e.target.value || 1))} className="w-12 text-center px-2 py-1 border rounded" />
-          <button onClick={() => nextPage()} disabled={page >= totalPages} className="px-3 py-1 rounded border">Next</button>
+          <button onClick={() => prevPage()} disabled={page <= 1} className="px-3 py-1 rounded border bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 disabled:opacity-50">Prev</button>
+          <input value={String(page)} onChange={(e) => goToPage(Number(e.target.value || 1))} className="w-12 text-center px-2 py-1 border rounded bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200" />
+          <button onClick={() => nextPage()} disabled={page >= totalPages} className="px-3 py-1 rounded border bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 disabled:opacity-50">Next</button>
           <div className="text-sm text-gray-500 ml-3">Showing {(page - 1) * PAGE_SIZE + 1} - {Math.min(page * PAGE_SIZE, total)} of {total}</div>
         </div>
 
@@ -516,7 +526,7 @@ const DatasetManager: React.FC = () => {
           )}
 
           <div>
-            <button onClick={() => { setQuery(""); setPage(1); setTagFilter(null); setStatusFilter(null); }} className="px-3 py-1 rounded border">Reset filters</button>
+            <button onClick={() => { setQuery(""); setPage(1); setTagFilter(null); setStatusFilter(null); }} className="px-3 py-1 rounded border bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">Reset filters</button>
           </div>
         </div>
       </div>

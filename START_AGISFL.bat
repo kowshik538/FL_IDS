@@ -5,6 +5,12 @@ REM Set college project mode
 set COLLEGE_PROJECT=true
 set JWT_SECRET=agisfl-college-project-2025-secure-jwt-secret-key
 
+:: Prefer Python 3.12 environment for compatibility
+set VENV_DIR=venv
+if exist "venv312\Scripts\python.exe" (
+    set VENV_DIR=venv312
+)
+
 :: AgisFL Enterprise - Universal Startup Script
 echo ========================================
 echo    AgisFL Enterprise Platform v1.1
@@ -38,9 +44,13 @@ taskkill /f /im electron.exe >nul 2>&1
 timeout /t 2 >nul
 
 :: Setup virtual environment
-if not exist "venv\Scripts\activate.bat" (
+if not exist "%VENV_DIR%\Scripts\activate.bat" (
     echo [SETUP] Creating virtual environment...
-    python -m venv venv
+    if "%VENV_DIR%"=="venv312" (
+        py -3.12 -m venv venv312
+    ) else (
+        python -m venv venv
+    )
     if errorlevel 1 (
         echo [ERROR] Failed to create virtual environment
         echo [ERROR] Please ensure Python 3.8+ is installed
@@ -50,7 +60,7 @@ if not exist "venv\Scripts\activate.bat" (
 )
 
 echo [SETUP] Activating virtual environment...
-call venv\Scripts\activate.bat
+call %VENV_DIR%\Scripts\activate.bat
 
 :: Install dependencies based on mode
 if "%MODE%"=="1" goto :quick_install
@@ -61,7 +71,7 @@ if "%MODE%"=="5" goto :desktop_install
 
 :quick_install
 echo [INSTALL] Installing core dependencies (quick mode)...
-pip install -q fastapi uvicorn pydantic scikit-learn numpy psutil websockets python-dotenv
+pip install -q fastapi uvicorn pydantic scikit-learn numpy psutil websockets python-dotenv sqlalchemy aiosqlite
 goto :start_application
 
 :production_install
