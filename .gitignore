@@ -58,6 +58,8 @@ pytestdebug.log
 ### Data / Datasets / Exports ###
 data/**
 !data/*.example
+### Backend local upload storage (do not commit user datasets) ###
+backend/data/datasets/
 datasets/**
 !datasets/README.md
 !datasets/*.md

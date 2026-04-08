@@ -56,7 +56,50 @@ interface SecurityState {
   selectThreat: (threat: SecurityThreat | null) => void;
   setFilter: (filterName: keyof SecurityState['filters'], value: string) => void;
   takeActionOnThreat: (threatId: string) => Promise<void>;
+  addNewThreat: () => void;
+  autoMitigateThreat: () => void;
+  updateMetrics: () => void;
 }
+
+// Dynamic threat generation helpers
+const THREAT_TYPES = [
+  { type: 'DDoS Attack', severity: 'HIGH' as const, protocol: 'UDP', description: 'Distributed denial of service attack detected.' },
+  { type: 'Port Scan', severity: 'MEDIUM' as const, protocol: 'TCP', description: 'Network port scanning activity detected.' },
+  { type: 'SQL Injection Attempt', severity: 'HIGH' as const, protocol: 'HTTP', description: 'SQL injection attack on web endpoint.' },
+  { type: 'Malware Beaconing', severity: 'MEDIUM' as const, protocol: 'DNS', description: 'Suspicious outbound connection to known C2 server.' },
+  { type: 'Brute Force Attack', severity: 'HIGH' as const, protocol: 'SSH', description: 'Multiple failed authentication attempts detected.' },
+  { type: 'XSS Attempt', severity: 'MEDIUM' as const, protocol: 'HTTP', description: 'Cross-site scripting attempt blocked.' },
+  { type: 'Anomalous Login', severity: 'LOW' as const, protocol: 'HTTPS', description: 'Login from unusual location or device.' },
+  { type: 'Data Exfiltration', severity: 'HIGH' as const, protocol: 'HTTPS', description: 'Large data transfer to external IP detected.' },
+  { type: 'Ransomware Activity', severity: 'HIGH' as const, protocol: 'SMB', description: 'File encryption behavior detected on network share.' },
+  { type: 'Privilege Escalation', severity: 'HIGH' as const, protocol: 'RPC', description: 'Unauthorized privilege elevation attempt.' },
+  { type: 'DNS Tunneling', severity: 'MEDIUM' as const, protocol: 'DNS', description: 'Suspicious DNS query patterns detected.' },
+  { type: 'Cryptomining', severity: 'LOW' as const, protocol: 'TCP', description: 'Cryptocurrency mining activity detected.' },
+];
+
+const generateRandomIP = () => `${Math.floor(Math.random() * 223) + 1}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`;
+const generateInternalIP = () => `10.0.${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 254) + 1}`;
+
+let threatCounter = 100;
+
+const generateNewThreat = (): SecurityThreat => {
+  const threatTemplate = THREAT_TYPES[Math.floor(Math.random() * THREAT_TYPES.length)];
+  threatCounter++;
+  return {
+    id: `TH-${threatCounter.toString().padStart(3, '0')}`,
+    timestamp: new Date().toISOString(),
+    threat_type: threatTemplate.type,
+    severity: threatTemplate.severity,
+    source_ip: generateRandomIP(),
+    target_ip: generateInternalIP(),
+    description: threatTemplate.description,
+    status: 'ACTIVE',
+    confidence_score: Math.floor(Math.random() * 25) + 75,
+    mitigation_action: 'Analyzing threat pattern. Automated response pending.',
+    protocol: threatTemplate.protocol,
+    payload_size: Math.floor(Math.random() * 2000) + 64,
+  };
+};
 
 const useSecurityStore = create<SecurityState>((set, get) => ({
   threats: [],
@@ -73,39 +116,32 @@ const useSecurityStore = create<SecurityState>((set, get) => ({
   fetchSecurityData: async () => {
     set({ loading: true, error: null });
     try {
-      // Mock API calls with a delay to simulate network latency
-      await new Promise(res => setTimeout(res, 1000));
+      await new Promise(res => setTimeout(res, 800));
 
-      // In a real app, you would fetch from your API endpoints
-      // const metricsResponse = await fetch('/api/security/metrics');
-      // const threatsResponse = await fetch('/api/security/threats');
-      // if (!metricsResponse.ok || !threatsResponse.ok) {
-      //   throw new Error('Failed to fetch security data');
-      // }
-      // const metricsData = await metricsResponse.json();
-      // const threatsData = await threatsResponse.json();
-
-      // Using enhanced fallback data for a richer demo
+      // Start with dynamic metrics based on random trend
+      const baseThreats = Math.floor(Math.random() * 50) + 10;
       const metricsData: SecurityMetrics = {
-        total_threats: 178,
-        active_threats: 18,
-        blocked_attacks: 92,
-        security_score: 89,
-        vulnerability_score: 76,
-        firewall_rules: 2540,
-        ids_alerts: 312,
-        suspicious_ips: 48
+        total_threats: baseThreats + Math.floor(Math.random() * 100),
+        active_threats: Math.floor(Math.random() * 15) + 3,
+        blocked_attacks: Math.floor(Math.random() * 80) + 40,
+        security_score: Math.floor(Math.random() * 15) + 80,
+        vulnerability_score: Math.floor(Math.random() * 30) + 60,
+        firewall_rules: 2540 + Math.floor(Math.random() * 100),
+        ids_alerts: Math.floor(Math.random() * 200) + 100,
+        suspicious_ips: Math.floor(Math.random() * 40) + 20
       };
-      const threatsData: SecurityThreat[] = [
-        { id: 'TH-001', timestamp: new Date(Date.now() - 3600000).toISOString(), threat_type: 'DDoS Attack', severity: 'HIGH', source_ip: '203.0.113.0/24', target_ip: '10.0.0.1', description: 'Distributed denial of service attack detected against primary web server.', status: 'MITIGATED', confidence_score: 98, mitigation_action: 'Activated Cloudflare DDoS protection and blocked source CIDR range.', protocol: 'UDP', payload_size: 1500 },
-        { id: 'TH-002', timestamp: new Date().toISOString(), threat_type: 'Port Scan', severity: 'MEDIUM', source_ip: '198.51.100.12', target_ip: '10.0.0.50', description: 'Nmap scan detected targeting multiple common ports.', status: 'ACTIVE', confidence_score: 85, mitigation_action: 'IP temporarily blocked at firewall. Monitoring for further activity.', protocol: 'TCP', payload_size: 60 },
-        { id: 'TH-003', timestamp: new Date(Date.now() - 7200000).toISOString(), threat_type: 'SQL Injection Attempt', severity: 'HIGH', source_ip: '192.0.2.200', target_ip: '10.0.1.10', description: 'Attempted SQL injection on login endpoint.', status: 'MITIGATED', confidence_score: 99, mitigation_action: 'WAF rule triggered and blocked the request. IP blacklisted.', protocol: 'HTTP', payload_size: 256 },
-        { id: 'TH-004', timestamp: new Date(Date.now() - 900000).toISOString(), threat_type: 'Malware Beaconing', severity: 'MEDIUM', source_ip: '10.0.5.23', target_ip: 'malware-c2.badguy.net', description: 'Internal host beaconing to a known malware command and control server.', status: 'INVESTIGATING', confidence_score: 92, mitigation_action: 'Host quarantined. Incident response team notified.', protocol: 'DNS', payload_size: 78 },
-        { id: 'TH-005', timestamp: new Date(Date.now() - 18000000).toISOString(), threat_type: 'Anomalous Login', severity: 'LOW', source_ip: '203.0.113.55', target_ip: 'auth.ids.local', description: 'Login from a new geographic location for user `admin`.', status: 'MITIGATED', confidence_score: 70, mitigation_action: 'Session terminated. User prompted for MFA verification.', protocol: 'HTTPS', payload_size: 1204 },
-        { id: 'TH-006', timestamp: new Date(Date.now() - 86400000).toISOString(), threat_type: 'Outdated TLS Version', severity: 'LOW', source_ip: 'N/A', target_ip: '10.0.2.15', description: 'Server configured with deprecated TLS 1.0.', status: 'ACTIVE', confidence_score: 100, mitigation_action: 'Scheduled for patching in next maintenance window.', protocol: 'TLS', payload_size: 0 },
-      ];
 
-      set({ metrics: metricsData, threats: threatsData, loading: false });
+      // Generate initial dynamic threats
+      const initialThreats: SecurityThreat[] = [];
+      const numInitialThreats = Math.floor(Math.random() * 4) + 3;
+      for (let i = 0; i < numInitialThreats; i++) {
+        const threat = generateNewThreat();
+        threat.timestamp = new Date(Date.now() - Math.random() * 3600000).toISOString();
+        threat.status = ['ACTIVE', 'MITIGATED', 'INVESTIGATING'][Math.floor(Math.random() * 3)] as any;
+        initialThreats.push(threat);
+      }
+
+      set({ metrics: metricsData, threats: initialThreats, loading: false });
     } catch (error) {
       const err = error as Error;
       console.error('Failed to fetch security data:', err);
@@ -141,7 +177,7 @@ const useSecurityStore = create<SecurityState>((set, get) => ({
           t.id === threatId
             ? {
                 ...t,
-                status: 'MITIGATED',
+                status: 'MITIGATED' as const,
                 mitigation_action:
                   t.mitigation_action || 'Mitigation action executed successfully.',
               }
@@ -152,7 +188,7 @@ const useSecurityStore = create<SecurityState>((set, get) => ({
           s.selectedThreat?.id === threatId
             ? {
                 ...s.selectedThreat,
-                status: 'MITIGATED',
+                status: 'MITIGATED' as const,
                 mitigation_action:
                   s.selectedThreat.mitigation_action ||
                   'Mitigation action executed successfully.',
@@ -172,6 +208,70 @@ const useSecurityStore = create<SecurityState>((set, get) => ({
       set({ actionLoading: false });
     }
   },
+  // Add a new threat dynamically
+  addNewThreat: () => {
+    const newThreat = generateNewThreat();
+    set((state) => {
+      const updatedThreats = [newThreat, ...state.threats].slice(0, 20);
+      const metrics = state.metrics;
+      if (metrics) {
+        return {
+          threats: updatedThreats,
+          metrics: {
+            ...metrics,
+            total_threats: metrics.total_threats + 1,
+            active_threats: metrics.active_threats + 1,
+            ids_alerts: metrics.ids_alerts + 1,
+          }
+        };
+      }
+      return { threats: updatedThreats };
+    });
+  },
+  // Auto-mitigate a random active threat
+  autoMitigateThreat: () => {
+    set((state) => {
+      const activeThreats = state.threats.filter(t => t.status === 'ACTIVE');
+      if (activeThreats.length === 0) return state;
+      
+      const threatToMitigate = activeThreats[Math.floor(Math.random() * activeThreats.length)];
+      const updatedThreats = state.threats.map(t => 
+        t.id === threatToMitigate.id 
+          ? { ...t, status: 'MITIGATED' as const, mitigation_action: 'Automatically mitigated by FL-IDS model.' }
+          : t
+      );
+      
+      const metrics = state.metrics;
+      if (metrics) {
+        return {
+          threats: updatedThreats,
+          metrics: {
+            ...metrics,
+            active_threats: Math.max(0, metrics.active_threats - 1),
+            blocked_attacks: metrics.blocked_attacks + 1,
+            security_score: Math.min(100, metrics.security_score + 1),
+          }
+        };
+      }
+      return { threats: updatedThreats };
+    });
+  },
+  // Update metrics with random fluctuation
+  updateMetrics: () => {
+    set((state) => {
+      if (!state.metrics) return state;
+      
+      const trend = Math.random() > 0.5 ? 1 : -1;
+      return {
+        metrics: {
+          ...state.metrics,
+          security_score: Math.max(70, Math.min(99, state.metrics.security_score + trend * Math.floor(Math.random() * 3))),
+          vulnerability_score: Math.max(50, Math.min(90, state.metrics.vulnerability_score + trend * Math.floor(Math.random() * 2))),
+          suspicious_ips: Math.max(5, state.metrics.suspicious_ips + trend * Math.floor(Math.random() * 5)),
+        }
+      };
+    });
+  },
 }));
 
 // 2. REUSABLE UI COMPONENTS
@@ -179,7 +279,7 @@ const useSecurityStore = create<SecurityState>((set, get) => ({
 // Breaking the UI into smaller, focused components improves readability,
 // reusability, and makes the codebase easier to maintain.
 
-const MetricCard = ({ icon: Icon, title, value, colorClass }) => (
+const MetricCard = ({ icon: Icon, title, value, colorClass }: { icon: React.ComponentType<{ className?: string }>, title: string, value: string | number, colorClass: string }) => (
   <div className="bg-gray-800/50 rounded-xl p-5 border border-gray-700/80 hover:border-blue-500/50 hover:bg-gray-800 transition-all duration-300 shadow-lg">
     <div className="flex items-center space-x-4">
       <div className={`p-3 rounded-lg bg-gray-700/50 ${colorClass}`}>
@@ -193,7 +293,7 @@ const MetricCard = ({ icon: Icon, title, value, colorClass }) => (
   </div>
 );
 
-const Badge = ({ text, colorClasses }) => (
+const Badge = ({ text, colorClasses }: { text: string, colorClasses: string }) => (
   <span className={`px-3 py-1 text-xs font-semibold rounded-full border ${colorClasses}`}>
     {text}
   </span>
@@ -235,19 +335,6 @@ const SkeletonLoader = () => (
 // 3. COMPONENT SECTIONS
 // ============================================================================
 // Each major part of the page is its own component for clarity.
-
-const SecurityHeader = () => (
-  <div className="flex items-center justify-between pb-4 border-b border-gray-700/50">
-    <div>
-      <h1 className="text-3xl font-bold text-white">Security Center</h1>
-      <p className="text-gray-400 mt-1">Central hub for threat intelligence, monitoring, and response.</p>
-    </div>
-    <button className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors shadow-md hover:shadow-lg">
-      <Settings className="w-5 h-5" />
-      <span>Manage Settings</span>
-    </button>
-  </div>
-);
 
 const SecurityMetricsOverview = () => {
   const metrics = useSecurityStore((state) => state.metrics);
@@ -472,11 +559,42 @@ const ThreatDetailModal = () => {
 // pieces. The core logic is handled by the Zustand store.
 
 const SecurityCenter: React.FC = () => {
-  const { loading, error, fetchSecurityData } = useSecurityStore();
+  const { loading, error, fetchSecurityData, addNewThreat, autoMitigateThreat, updateMetrics } = useSecurityStore();
+  const [isLive, setIsLive] = React.useState(true);
 
   React.useEffect(() => {
     fetchSecurityData();
   }, [fetchSecurityData]);
+
+  // Real-time threat simulation
+  React.useEffect(() => {
+    if (!isLive || loading) return;
+
+    // Add new threats randomly (every 5-15 seconds)
+    const threatInterval = setInterval(() => {
+      if (Math.random() > 0.4) { // 60% chance to add a new threat
+        addNewThreat();
+      }
+    }, Math.random() * 10000 + 5000);
+
+    // Auto-mitigate threats randomly (every 8-20 seconds)
+    const mitigateInterval = setInterval(() => {
+      if (Math.random() > 0.3) { // 70% chance to mitigate
+        autoMitigateThreat();
+      }
+    }, Math.random() * 12000 + 8000);
+
+    // Update metrics (every 3-6 seconds)
+    const metricsInterval = setInterval(() => {
+      updateMetrics();
+    }, Math.random() * 3000 + 3000);
+
+    return () => {
+      clearInterval(threatInterval);
+      clearInterval(mitigateInterval);
+      clearInterval(metricsInterval);
+    };
+  }, [isLive, loading, addNewThreat, autoMitigateThreat, updateMetrics]);
 
   if (loading) {
     return <SkeletonLoader />;
@@ -498,7 +616,28 @@ const SecurityCenter: React.FC = () => {
   return (
     <div className="p-6 bg-gray-900 text-white min-h-screen font-sans">
         <div className="space-y-6">
-            <SecurityHeader />
+            <div className="flex items-center justify-between pb-4 border-b border-gray-700/50">
+              <div>
+                <h1 className="text-3xl font-bold text-white">Security Center</h1>
+                <p className="text-gray-400 mt-1">Central hub for threat intelligence, monitoring, and response.</p>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <span className={`w-2 h-2 rounded-full ${isLive ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`}></span>
+                  <span className="text-sm text-gray-400">{isLive ? 'Live Monitoring' : 'Paused'}</span>
+                </div>
+                <button 
+                  onClick={() => setIsLive(!isLive)}
+                  className={`px-4 py-2 rounded-lg transition-colors ${isLive ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white`}
+                >
+                  {isLive ? 'Pause' : 'Resume'}
+                </button>
+                <button className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors shadow-md hover:shadow-lg">
+                  <Settings className="w-5 h-5" />
+                  <span>Manage Settings</span>
+                </button>
+              </div>
+            </div>
             <SecurityMetricsOverview />
             <ThreatDistributionChart />
             <ThreatFilters />

@@ -96,12 +96,6 @@ const useIntegrationsStore = create<IntegrationsState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const data = await mockApi.fetch();
-      const summary: SummaryMetrics = {
-          total: data.length,
-          active: data.filter(i => i.status === 'ACTIVE').length,
-          errors: data.filter(i => i.status === 'ERROR').length,
-          avgHealth: data.reduce((acc, i) => acc + i.healthScore, 0) / data.length || 0,
-      };
       // Merge with existing state so that user-toggled statuses
       // are preserved across refreshes in this session.
       set((state) => {
@@ -110,6 +104,13 @@ const useIntegrationsStore = create<IntegrationsState>((set, get) => ({
           if (!existing) return integration;
           return { ...integration, status: existing.status };
         });
+        // Calculate summary from merged data (preserves user toggles)
+        const summary: SummaryMetrics = {
+          total: merged.length,
+          active: merged.filter(i => i.status === 'ACTIVE').length,
+          errors: merged.filter(i => i.status === 'ERROR').length,
+          avgHealth: merged.reduce((acc, i) => acc + i.healthScore, 0) / merged.length || 0,
+        };
         return { integrations: merged, summary, loading: false };
       });
     } catch (e) {
@@ -126,13 +127,35 @@ const useIntegrationsStore = create<IntegrationsState>((set, get) => ({
 
     try {
       const newStatus = await mockApi.toggle(integration.status);
-      set(state => ({
-        integrations: state.integrations.map(i => i.id === id ? { ...i, status: newStatus, last_update: new Date().toISOString() } : i)
-      }));
+      set(state => {
+        const updatedIntegrations = state.integrations.map(i => 
+          i.id === id ? { ...i, status: newStatus, last_update: new Date().toISOString() } : i
+        );
+        // Recalculate summary metrics
+        const summary: SummaryMetrics = {
+          total: updatedIntegrations.length,
+          active: updatedIntegrations.filter(i => i.status === 'ACTIVE').length,
+          errors: updatedIntegrations.filter(i => i.status === 'ERROR').length,
+          avgHealth: updatedIntegrations.reduce((acc, i) => acc + i.healthScore, 0) / updatedIntegrations.length || 0,
+        };
+        return { integrations: updatedIntegrations, summary };
+      });
       toast.success(`${integration.name} is now ${newStatus.toLowerCase()}.`, { id: toastId });
     } catch (e) {
       toast.error(`Failed to toggle ${integration.name}.`, { id: toastId });
-      set(state => ({ integrations: state.integrations.map(i => i.id === id ? { ...i, status: 'ERROR' } : i) }));
+      set(state => {
+        const updatedIntegrations = state.integrations.map(i => 
+          i.id === id ? { ...i, status: 'ERROR' } : i
+        );
+        // Recalculate summary metrics on error too
+        const summary: SummaryMetrics = {
+          total: updatedIntegrations.length,
+          active: updatedIntegrations.filter(i => i.status === 'ACTIVE').length,
+          errors: updatedIntegrations.filter(i => i.status === 'ERROR').length,
+          avgHealth: updatedIntegrations.reduce((acc, i) => acc + i.healthScore, 0) / updatedIntegrations.length || 0,
+        };
+        return { integrations: updatedIntegrations, summary };
+      });
     }
   },
   selectIntegration: (integration) => set({ selectedIntegration: integration }),

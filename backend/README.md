@@ -5,17 +5,27 @@ World-class Federated Learning Intrusion Detection System backend with enterpris
 ## 🚀 Quick Start
 
 ### Local Development
+
+**Option A: Use the run script (recommended)**  
+From the project root or from `backend/`, run:
+```batch
+backend\run_backend.bat
+```
+This uses the project's `venv` automatically.
+
+**Option B: Manual run with venv**
 ```bash
-# Install dependencies
-pip install -r requirements.txt
+# From project root: create venv and install deps (once)
+python -m venv venv
+venv\Scripts\activate
+pip install -r backend\requirements.txt
 
-# Set environment variables
-cp .env.example .env
-# Edit .env with your configuration
-
-# Run the application
+# From project root, run backend (with venv activated)
+cd backend
 python main.py
 ```
+
+If you see `ModuleNotFoundError: No module named 'uvicorn'`, the venv is not active—use Option A or run `..\venv\Scripts\activate` from the backend folder before `python main.py`.
 
 ### Docker Deployment
 ```bash

@@ -12,6 +12,10 @@
     "dev": "concurrently \"npm run dev:frontend\" \"cd backend && python main.py\"",
     "build": "npm run build:frontend"
   },
+  "dependencies": {
+    "@radix-ui/react-toast": "^1.2.4",
+    "class-variance-authority": "^0.7.1"
+  },
   "devDependencies": {
     "concurrently": "^9.2.0"
   },

@@ -509,8 +509,8 @@ const FederatedLearning: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-white dark:bg-gray-800">
-              <label className="text-sm text-gray-600 dark:text-gray-300" htmlFor="fl-rounds">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-white dark:bg-white dark:text-gray-800">
+              <label className="text-sm text-gray-600 dark:text-gray-800" htmlFor="fl-rounds">
                 Rounds
               </label>
               <input
@@ -520,7 +520,7 @@ const FederatedLearning: React.FC = () => {
                 max={10000}
                 value={roundsInput}
                 onChange={(e) => setRoundsInput(Number(e.target.value))}
-                className="w-24 bg-transparent outline-none text-sm"
+                className="w-24 bg-transparent outline-none text-sm text-gray-800"
                 disabled={!!actionPending}
               />
             </div>
@@ -529,7 +529,7 @@ const FederatedLearning: React.FC = () => {
               aria-label="Select FL strategy"
               value={selectedStrategy}
               onChange={(e) => changeStrategy(e.target.value)}
-              className="px-3 py-2 rounded-lg border bg-white dark:bg-gray-800"
+              className="px-3 py-2 rounded-lg border bg-white dark:bg-white dark:text-gray-800"
               disabled={!!actionPending}
             >
               {strategies.map((s) => (

@@ -230,21 +230,46 @@ const DatasetManager: React.FC = () => {
   const onPreview = async (dataset: Dataset) => {
     setSelectedDataset(null);
     try {
-      const data = await datasetsAPI.preview(dataset.id);
-      setSelectedDataset({ ...dataset, preview_rows: data.rows });
+      const response = await datasetsAPI.preview(dataset.id);
+      const rows = response.data?.rows || response.data || [];
+      setSelectedDataset({ ...dataset, preview_rows: rows });
+      if (!rows.length) {
+        toast("No preview data available", { icon: "ℹ️" });
+      }
     } catch (e) {
+      console.error("Preview error:", e);
       toast.error("Failed to load preview");
     }
   };
 
-  // delete (role guarded)
-  const onDelete = (id: string) => {
-    if (role !== "admin") {
-      toast.error("Insufficient permissions");
-      return;
+  // download
+  const onDownload = async (dataset: Dataset) => {
+    try {
+      const response = await fetch(`http://127.0.0.1:8001/api/datasets/${dataset.id}/download`);
+      if (!response.ok) throw new Error("Download failed");
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = dataset.name.endsWith(".csv") ? dataset.name : `${dataset.name}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      toast.success("Download started");
+    } catch (e) {
+      console.error("Download error:", e);
+      toast.error("Failed to download dataset");
     }
+  };
+
+  // delete (available to all users)
+  const onDelete = (id: string) => {
     if (!confirm("Delete dataset? This action is irreversible.")) return;
     deleteMutation.mutate(id);
+    if (selectedDataset?.id === id) {
+      setSelectedDataset(null);
+    }
   };
 
   // upload modal submit
@@ -298,8 +323,8 @@ const DatasetManager: React.FC = () => {
       key: "actions", label: "", render: (_: any, row: Dataset) => (
         <div className="flex items-center gap-2">
           <button title="Preview" onClick={() => onPreview(row)} className="p-2 rounded hover:bg-gray-100"><Eye className="w-4 h-4" /></button>
-          <button title="Download" onClick={() => datasetsAPI.download(row.id)} className="p-2 rounded hover:bg-gray-100"><Download className="w-4 h-4" /></button>
-          {role === "admin" && <button title="Delete" onClick={() => onDelete(row.id)} className="p-2 rounded hover:bg-red-50 text-red-600"><Trash2 className="w-4 h-4" /></button>}
+          <button title="Download" onClick={() => onDownload(row)} className="p-2 rounded hover:bg-gray-100"><Download className="w-4 h-4" /></button>
+          <button title="Delete" onClick={() => onDelete(row.id)} className="p-2 rounded hover:bg-red-50 text-red-600"><Trash2 className="w-4 h-4" /></button>
         </div>
       )
     }
@@ -369,12 +394,12 @@ const DatasetManager: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-gray-500" />
-          <select className="px-3 py-1 rounded border bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200" value={tagFilter ?? ""} onChange={(e) => { setTagFilter(e.target.value || null); setPage(1); }}>
+          <select className="px-3 py-1 rounded border bg-white dark:bg-white dark:border-gray-600 dark:text-gray-800" value={tagFilter ?? ""} onChange={(e) => { setTagFilter(e.target.value || null); setPage(1); }}>
             <option value="">All tags</option>
             {tags.map(t => <option value={t} key={t}>{t}</option>)}
           </select>
 
-          <select className="px-3 py-1 rounded border bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200" value={statusFilter ?? ""} onChange={(e) => { setStatusFilter(e.target.value || null); setPage(1); }}>
+          <select className="px-3 py-1 rounded border bg-white dark:bg-white dark:border-gray-600 dark:text-gray-800" value={statusFilter ?? ""} onChange={(e) => { setStatusFilter(e.target.value || null); setPage(1); }}>
             <option value="">All statuses</option>
             <option value="ready">Ready</option>
             <option value="processing">Processing</option>
@@ -437,8 +462,8 @@ const DatasetManager: React.FC = () => {
                     <td className="px-3 py-2 border-b">
                       <div className="flex gap-2">
                         <button onClick={() => onPreview(row)} title="Preview" className="p-2 rounded hover:bg-gray-100"><Eye className="w-4 h-4" /></button>
-                        <button onClick={() => datasetsAPI.download(row.id)} title="Download" className="p-2 rounded hover:bg-gray-100"><Download className="w-4 h-4" /></button>
-                        {role === "admin" && <button onClick={() => onDelete(row.id)} title="Delete" className="p-2 rounded hover:bg-red-50 text-red-600"><Trash2 className="w-4 h-4" /></button>}
+                        <button onClick={() => onDownload(row)} title="Download" className="p-2 rounded hover:bg-gray-100"><Download className="w-4 h-4" /></button>
+                        <button onClick={() => onDelete(row.id)} title="Delete" className="p-2 rounded hover:bg-red-50 text-red-600"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </td>
                   </tr>
@@ -479,8 +504,8 @@ const DatasetManager: React.FC = () => {
 
                   <div className="flex items-center gap-2">
                     <button onClick={() => onPreview(ds)} title="Preview" className="p-2 rounded hover:bg-gray-100"><Eye className="w-4 h-4" /></button>
-                    <button onClick={() => datasetsAPI.download(ds.id)} title="Download" className="p-2 rounded hover:bg-gray-100"><Download className="w-4 h-4" /></button>
-                    {role === "admin" && <button onClick={() => onDelete(ds.id)} title="Delete" className="p-2 rounded hover:bg-red-50 text-red-600"><Trash2 className="w-4 h-4" /></button>}
+                    <button onClick={() => onDownload(ds)} title="Download" className="p-2 rounded hover:bg-gray-100"><Download className="w-4 h-4" /></button>
+                    <button onClick={() => onDelete(ds.id)} title="Delete" className="p-2 rounded hover:bg-red-50 text-red-600"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>
 
@@ -511,9 +536,9 @@ const DatasetManager: React.FC = () => {
       {/* Pagination & upload progress */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <button onClick={() => prevPage()} disabled={page <= 1} className="px-3 py-1 rounded border bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 disabled:opacity-50">Prev</button>
-          <input value={String(page)} onChange={(e) => goToPage(Number(e.target.value || 1))} className="w-12 text-center px-2 py-1 border rounded bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200" />
-          <button onClick={() => nextPage()} disabled={page >= totalPages} className="px-3 py-1 rounded border bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 disabled:opacity-50">Next</button>
+          <button onClick={() => prevPage()} disabled={page <= 1} className="px-3 py-1 rounded border bg-white dark:bg-white dark:border-gray-600 dark:text-gray-800 disabled:opacity-50">Prev</button>
+          <input value={String(page)} onChange={(e) => goToPage(Number(e.target.value || 1))} className="w-12 text-center px-2 py-1 border rounded bg-white dark:bg-white dark:border-gray-600 dark:text-gray-800" />
+          <button onClick={() => nextPage()} disabled={page >= totalPages} className="px-3 py-1 rounded border bg-white dark:bg-white dark:border-gray-600 dark:text-gray-800 disabled:opacity-50">Next</button>
           <div className="text-sm text-gray-500 ml-3">Showing {(page - 1) * PAGE_SIZE + 1} - {Math.min(page * PAGE_SIZE, total)} of {total}</div>
         </div>
 
@@ -526,7 +551,7 @@ const DatasetManager: React.FC = () => {
           )}
 
           <div>
-            <button onClick={() => { setQuery(""); setPage(1); setTagFilter(null); setStatusFilter(null); }} className="px-3 py-1 rounded border bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">Reset filters</button>
+            <button onClick={() => { setQuery(""); setPage(1); setTagFilter(null); setStatusFilter(null); }} className="px-3 py-1 rounded border bg-white dark:bg-white dark:border-gray-600 dark:text-gray-800 hover:bg-gray-100 dark:hover:bg-gray-100">Reset filters</button>
           </div>
         </div>
       </div>
@@ -548,7 +573,8 @@ const DatasetManager: React.FC = () => {
               </div>
 
               <div className="flex gap-2">
-                <button onClick={() => { datasetsAPI.download(selectedDataset.id); }} className="px-3 py-1 rounded border inline-flex items-center gap-2"><Download className="w-4 h-4" />Download</button>
+                <button onClick={() => { onDownload(selectedDataset); }} className="px-3 py-1 rounded border inline-flex items-center gap-2"><Download className="w-4 h-4" />Download</button>
+                <button onClick={() => onDelete(selectedDataset.id)} className="px-3 py-1 rounded border text-red-600 inline-flex items-center gap-2"><Trash2 className="w-4 h-4" />Delete</button>
                 <button onClick={() => { setSelectedDataset(null); }} className="px-3 py-1 rounded border">Close</button>
               </div>
             </div>

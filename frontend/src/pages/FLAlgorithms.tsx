@@ -57,8 +57,7 @@ interface AlgorithmState {
 // Mock API to simulate fetching algorithm data
 const mockApi = {
   fetch: async (): Promise<Algorithm[]> => {
-    await new Promise(res => setTimeout(res, 1500));
-    if (Math.random() < 0.05) throw new Error("Failed to connect to Research API");
+    await new Promise(res => setTimeout(res, 800));
     return [
         { id: 'fedavg', name: 'Federated Averaging (FedAvg)', description: 'The foundational algorithm for FL, averaging model weights from clients.', status: 'Production', category: 'General', version: '1.0', performance_metrics: { accuracy: 0.85, convergence_rate: 0.7, communication_efficiency: 0.6, robustness: 0.5, privacy_preservation: 0.3 }},
         { id: 'fedprox', name: 'Federated Proximal (FedProx)', description: 'An extension of FedAvg that adds a proximal term to handle statistical heterogeneity across clients.', status: 'Production', category: 'Robustness', version: '1.2', performance_metrics: { accuracy: 0.87, convergence_rate: 0.65, communication_efficiency: 0.6, robustness: 0.8, privacy_preservation: 0.3 }},
