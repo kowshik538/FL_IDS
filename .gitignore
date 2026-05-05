@@ -138,6 +138,7 @@ temp/
 *.cache
 ~$*
 node_modules/
+Anusha_Jampula_Resume.pdf
 
 ### Ignore local database snapshots but allow migrations/scripts ###
 db_dumps/
