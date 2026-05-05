@@ -26,9 +26,27 @@ export default defineConfig({
       }
     }
   },
+  // server: {
+  //   port: 5173,
+  //   host: '0.0.0.0',
+  //   proxy: {
+  //     '/api': {
+  //       target: 'http://127.0.0.1:8001',
+  //       changeOrigin: true,
+  //       secure: false
+  //     },
+  //     '/ws': {
+  //       target: 'ws://127.0.0.1:8001',
+  //       ws: true,
+  //       changeOrigin: true
+  //     }
+  //   }
+  // },
   server: {
     port: 5173,
     host: '0.0.0.0',
+    // Required for Cloudflare quick tunnels (*.trycloudflare.com); `true` allows any Host header
+    allowedHosts: true,
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:8001',

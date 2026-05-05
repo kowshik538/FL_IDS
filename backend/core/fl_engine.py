@@ -19,9 +19,20 @@ import math
 import random
 
 import numpy as np
-import torch
-import torch.nn as nn
-import torch.optim as optim
+
+# Optional torch import
+try:
+    import torch
+    import torch.nn as nn
+    import torch.optim as optim
+    TORCH_AVAILABLE = True
+except ImportError:
+    TORCH_AVAILABLE = False
+    torch = None
+    nn = None
+    optim = None
+    logger.warning("PyTorch not available; running in simulation mode only.")
+
 from sklearn.datasets import make_classification
 from typing import TYPE_CHECKING
 
@@ -84,9 +95,10 @@ def set_seed(seed: Optional[int]):
         return
     random.seed(seed)
     np.random.seed(seed)
-    torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(seed)
+    if TORCH_AVAILABLE:
+        torch.manual_seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
 
 
 # ---------------------------
@@ -311,7 +323,16 @@ class FederatedLearningEngine:
 
     def __init__(self, device: Optional[torch.device] = None, seed: Optional[int] = None, checkpoint_dir: str = "checkpoints"):
         self.clients: List[FederatedClient] = []
-        self.global_model = IDSModel()
+        if TORCH_AVAILABLE:
+            self.global_model = IDSModel()
+            self.device = device or (torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu"))
+            self.simulation_mode = False
+        else:
+            self.global_model = None
+            self.device = None
+            self.simulation_mode = True
+            logger.info("FL Engine running in simulation mode (PyTorch not available)")
+        
         self.strategies: Dict[str, FLStrategy] = {
             "FedAvg": FedAvgStrategy(),
             "FedProx": FedProxStrategy()
@@ -329,11 +350,11 @@ class FederatedLearningEngine:
         self._ws_callback: Optional[Callable[[Dict[str, Any]], Any]] = None
         self._progress_callback: Optional[Callable[[Dict[str, Any]], Any]] = None
         self._lock = asyncio.Lock()
-        self.device = device or (torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu"))
         self.checkpoint_dir = checkpoint_dir
         os.makedirs(self.checkpoint_dir, exist_ok=True)
         self.seed = seed
-        set_seed(seed)
+        if TORCH_AVAILABLE:
+            set_seed(seed)
         # track last exception for diagnostics
         self.last_exception: Optional[str] = None
 
