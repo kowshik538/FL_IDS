@@ -15,11 +15,12 @@ services:
       - key: CORS_ORIGINS
         sync: false
 
-staticSites:
-  - name: fl-ids-frontend
+  - type: web
+    name: fl-ids-frontend
+    runtime: static
     rootDir: frontend
     buildCommand: npm ci && npm run build
-    publishPath: dist
+    staticPublishPath: ./dist
     envVars:
       - key: NODE_VERSION
         value: 20.18.0
