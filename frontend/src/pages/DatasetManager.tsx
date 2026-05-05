@@ -26,7 +26,7 @@ import { CSVLink } from "react-csv";
 import toast from "react-hot-toast";
 import { DataTable } from "../components/Tables/DataTable";
 import { MetricCard } from "../components/Cards/MetricCard";
-import { datasetsAPI } from "../services/api"; // implemented above
+import { API_BASE_URL, datasetsAPI } from "../services/api"; // implemented above
 import { useAppStore } from "../stores/useAppStore"; // adjust path if needed
 
 // --- Types
@@ -245,7 +245,7 @@ const DatasetManager: React.FC = () => {
   // download
   const onDownload = async (dataset: Dataset) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8001/api/datasets/${dataset.id}/download`);
+      const response = await fetch(`${API_BASE_URL}/datasets/${dataset.id}/download`);
       if (!response.ok) throw new Error("Download failed");
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);

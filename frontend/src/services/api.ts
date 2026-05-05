@@ -2,6 +2,11 @@ import axios, { AxiosError } from 'axios';
 
 // Auto-detect API base URL
 const getApiBaseUrl = () => {
+  const envApiUrl = import.meta.env.VITE_API_URL;
+  if (envApiUrl && typeof envApiUrl === 'string' && envApiUrl.trim().length > 0) {
+    return envApiUrl.replace(/\/+$/, '');
+  }
+
   if (typeof window !== 'undefined') {
     const { protocol, hostname, port } = window.location;
     // If we're on the same host as the backend, use relative URLs
@@ -9,7 +14,7 @@ const getApiBaseUrl = () => {
       return '/api';
     }
   }
-  return 'http://127.0.0.1:8001/api';
+  return '/api';
 };
 
 export const API_BASE_URL = getApiBaseUrl();
